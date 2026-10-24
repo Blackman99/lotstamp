@@ -55,14 +55,35 @@ func Text(w io.Writer, a *advisory.Advisory, r scan.Result, s Style, scope strin
 	fmt.Fprintf(w, "%s\n\n", s.c("2", fmt.Sprintf("read %d files in %s · %s · nothing was executed", r.Scanned, took.Round(10*time.Millisecond), scope)))
 
 	counts := map[verdict.Status]int{}
-	shown := 0
-	for _, f := range r.Findings {
-		counts[f.Status]++
-		if f.Status == verdict.Absent && !s.All {
+	shown, yours := 0, 0
+	// Sibling binaries from one package (bun + bunx) that read the same are one line, not two.
+	also := map[int][]string{}
+	skip := map[int]bool{}
+	for i, f := range r.Findings {
+		if f.Status == verdict.Absent {
+			continue
+		}
+		for j := 0; j < i; j++ {
+			g := r.Findings[j]
+			if !skip[j] && g.Status == f.Status && g.Label == f.Label && g.Runtime == f.Runtime && g.Decoder == f.Decoder && filepath.Dir(g.Path) == filepath.Dir(f.Path) {
+				also[j] = append(also[j], filepath.Base(f.Path))
+				skip[i] = true
+				break
+			}
+		}
+	}
+	for i, f := range r.Findings {
+		if !skip[i] {
+			counts[f.Status]++
+		}
+		if (f.Status == verdict.Behind || f.Status == verdict.NoFixLine) && f.Who == "you" && !skip[i] {
+			yours++
+		}
+		if (f.Status == verdict.Absent && !s.All) || skip[i] {
 			continue
 		}
 		shown++
-		writeFinding(w, f, s)
+		writeFinding(w, f, s, also[i])
 	}
 	for _, n := range notes {
 		fmt.Fprintf(w, "%s %s\n", s.c("33", "note"), n)
@@ -88,13 +109,16 @@ func Text(w io.Writer, a *advisory.Advisory, r scan.Result, s Style, scope strin
 			fmt.Fprint(w, s.c("2", fmt.Sprintf("   (%s no decoder; --all lists them)", map[bool]string{true: "1 more file has", false: fmt.Sprintf("%d more files have", counts[verdict.Absent])}[counts[verdict.Absent] == 1])))
 		}
 		fmt.Fprintln(w)
+		if yours > 0 {
+			fmt.Fprintf(w, "%s\n", s.c("2", fmt.Sprintf("%d of the behind ones are yours to fix now (who: you)", yours)))
+		}
 	}
 	if counts[verdict.Behind]+counts[verdict.NoFixLine] == 0 && counts[verdict.Fixed] > 0 {
 		fmt.Fprintln(w, s.c("32", "Every decoder found carries the fix."))
 	}
 }
 
-func writeFinding(w io.Writer, f verdict.Finding, s Style) {
+func writeFinding(w io.Writer, f verdict.Finding, s Style, also []string) {
 	tag := fmt.Sprintf("%-11s", f.Status)
 	fmt.Fprintf(w, "%s %s  %s\n", s.c(statusColor(f.Status), tag), s.c("1", f.Label), s.c("2", s.tilde(f.Path)))
 	pad := strings.Repeat(" ", 12)
@@ -102,6 +126,9 @@ func writeFinding(w io.Writer, f verdict.Finding, s Style) {
 		fmt.Fprintf(w, "%s%s\n", pad, f.Runtime)
 	}
 	fmt.Fprintf(w, "%sdecoder  %s\n", pad, f.Decoder)
+	if len(also) > 0 {
+		fmt.Fprintf(w, "%s   also  %s (same package, same reading)\n", pad, strings.Join(also, ", "))
+	}
 	if f.Says != "" {
 		fmt.Fprintf(w, "%s%s  %s\n", pad, s.c("36", "version"), f.Says)
 		fmt.Fprintf(w, "%s%s  %s\n", pad, s.c("36", "    but"), f.But)
@@ -111,6 +138,9 @@ func writeFinding(w io.Writer, f verdict.Finding, s Style) {
 			continue // a script that merely mentions the runtime is not how you reach it
 		}
 		if strings.HasPrefix(v, "PATH ") || strings.HasPrefix(v, "MCP ") {
+			if strings.TrimPrefix(v, "PATH ") == f.Path {
+				break // found where it lives; the header already says so
+			}
 			fmt.Fprintf(w, "%s  found  %s\n", pad, s.tilde(strings.TrimPrefix(v, "PATH ")))
 			break
 		}

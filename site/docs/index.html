@@ -149,7 +149,7 @@ lotstamp advisory              <span class="c"># what is checked, and the source
     "decoder": "pre-fix code: 16 decoder error names, no BLOCK_SWITCH",
     "version_says": "contains a Node 26.3.0 headers URL",
     "but": "that is Bun's Node-compat level; the runtime is Bun 1.4.2",
-    "fix": "upgrade Bun: bun upgrade, or reinstall it the way you installed it (Bun 1.4.4 or newer has the fix)",
+    "fix": "pnpm add -g bun@latest  (Bun 1.4.4 or newer has the fix)",
     "who": "you",
     "found_via": ["global packages /usr/local/lib/pnpm"],
     "evidence": { "size": 79500640, "format": "elf",
@@ -176,12 +176,14 @@ lotstamp advisory              <span class="c"># what is checked, and the source
       <p>On the 8 AI coding tools we measured (latest Linux x64 builds, 2026-10-24), a version comparison flagged 6 as exposed. All 6 carry the fixed decoder. On a Debian 13 box it flagged 4 of 7 copies and missed the 2 that weren't Node at all: Python's <code>brotli</code> module and the system <code>libbrotlidec</code> Debian's node actually uses. The data is on <a href="../#belt">the belt</a> and in <code>site/demo.json</code>.</p></details>
     <details><summary>How fast is it?</summary>
       <p>1.4 s on the Debian box the belt shows (27 files read); it reads only runtime-sized binaries (8 MB+) and Brotli libraries, four at a time. <code>LOTSTAMP_TRACE=1</code> shows where the time goes.</p></details>
+    <details><summary>VS Code shows a BEHIND line for <code>vsce-sign</code>.</summary>
+      <p>That is real: VS Code 1.143.1 bundles <code>vsce-sign</code>, a native extension-signature helper with its own statically linked Brotli, and its error table has 16 names, no BLOCK_SWITCH. VS Code's own runtime reads FIXED. Whether untrusted Brotli data ever reaches <code>vsce-sign</code> is not known, so lotstamp grades the code it found and says so; the fix has to come from Microsoft.</p></details>
     <details><summary>An AppImage shows UNKNOWN.</summary>
       <p>Its payload is a compressed squashfs. Extract it (<code>./App.AppImage --appimage-extract</code>, which does run the AppImage's own runtime, or <code>unsquashfs</code>) and point lotstamp at <code>squashfs-root/</code>.</p></details>
     <details><summary>Can it check other CVEs?</summary>
-      <p>Not yet. The probe is general (look for a string a fix added), and the advisory is a JSON file in <code>internal/advisory</code>. The <a href="https://github.com/Blackman99/lotstamp/blob/main/ROADMAP.md">roadmap</a> lists what would come next.</p></details>
+      <p>Not yet. The probe is general (look for a string a fix added), and the advisory is a JSON file in <code>internal/advisory</code>. The <a href="https://github.com/Blackman99/lotstamp#roadmap">roadmap</a> lists what would come next.</p></details>
     <details><summary>Something was graded wrong.</summary>
-      <p>Please <a href="https://github.com/Blackman99/lotstamp/issues/new/choose">open an issue</a> with the <code>--json</code> finding; the evidence block is enough to reproduce it without the file.</p></details>
+      <p>Please <a href="https://github.com/Blackman99/lotstamp/issues/new">open an issue</a> with the <code>--json</code> finding; the evidence block is enough to reproduce it without the file.</p></details>
   </section>
 </main>
 </div>

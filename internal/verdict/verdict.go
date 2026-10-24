@@ -4,6 +4,8 @@ package verdict
 
 import (
 	"fmt"
+	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -169,6 +171,9 @@ func Judge(a *advisory.Advisory, s Subject, ev *probe.Evidence, osr pkgdb.OS) Fi
 		v := ev.Node[0]
 		if fx := a.NodeFixFor(v); fx != "" {
 			f.Fix = "upgrade to Node " + fx + " or newer on the " + fmt.Sprint(advisory.Major(v)) + ".x line"
+			if cmd := nodeManagerFix(s.Real, advisory.Major(v), fx); cmd != "" {
+				f.Fix = cmd + "  (Node " + fx + " or newer on the " + fmt.Sprint(advisory.Major(v)) + ".x line)"
+			}
 		} else {
 			f.Status = NoFixLine
 			f.Fix = "Node " + fmt.Sprint(advisory.Major(v)) + ".x gets no fix; move to " + a.Node.Advice
@@ -180,19 +185,33 @@ func Judge(a *advisory.Advisory, s Subject, ev *probe.Evidence, osr pkgdb.OS) Fi
 	case KindPython:
 		dist := strings.ToLower(s.PyDist)
 		f.Fix = fmt.Sprintf("pip install -U '%s>=%s' in that environment", dist, a.PyPI[dist])
+		if py := pythonFor(s.Real); py != "" {
+			f.Fix = fmt.Sprintf("%s -U '%s>=%s'", py, dist, a.PyPI[dist])
+		}
 	default:
 		f.Fix = "rebuild against Brotli " + strings.Join(a.UpstreamFixed, " / ")
 	}
 	if s.Origin == "app" && (f.Kind == KindNode || f.Kind == KindBun || f.Kind == KindElectron || f.Kind == KindOther) {
 		f.Who = "vendor"
-		f.Fix = "update " + strings.Split(f.Label, " · ")[0] + "; if the latest still reads BEHIND, the vendor has to ship a rebuild (" + f.Fix + ")"
+		upd := "update " + strings.Split(f.Label, " · ")[0]
+		if pkg := npmGlobalPkg(s.Real); pkg != "" {
+			upd = "npm install -g " + pkg + "@latest"
+		}
+		f.Fix = upd + "; if the latest still reads BEHIND, the vendor has to ship a rebuild (" + f.Fix + ")"
 		if f.Status == NoFixLine {
 			f.Status = Behind
 		}
 	} else {
 		f.Who = "you"
 		if f.Kind == KindBun {
-			f.Fix = "upgrade Bun: bun upgrade, or reinstall it the way you installed it (" + f.Fix + ")"
+			switch {
+			case strings.Contains(filepath.ToSlash(s.Real), "/.pnpm/"):
+				f.Fix = "pnpm add -g bun@latest  (" + f.Fix + ")"
+			case npmGlobalPkg(s.Real) == "bun":
+				f.Fix = "npm install -g bun@latest  (" + f.Fix + ")"
+			default:
+				f.Fix = "bun upgrade, or reinstall it the way you installed it (" + f.Fix + ")"
+			}
 		}
 	}
 	return f
@@ -279,4 +298,68 @@ func cellarVersion(p string) string {
 	v, _, _ := strings.Cut(rest, "/")
 	v, _, _ = strings.Cut(v, "_")
 	return v
+}
+
+// nodeManagerFix names the command for the version manager that owns this node, if any.
+func nodeManagerFix(real string, major int, fx string) string {
+	p := filepath.ToSlash(real)
+	m := fmt.Sprint(major)
+	switch {
+	case strings.Contains(p, "/.nvm/versions/node/"):
+		return "nvm install " + m + " && nvm alias default " + m
+	case strings.Contains(p, "/.volta/tools/image/node/"):
+		return "volta install node@" + m
+	case strings.Contains(p, "/fnm/node-versions/") || strings.Contains(p, "/.fnm/node-versions/"):
+		return "fnm install " + m + " && fnm default " + m
+	case strings.Contains(p, "/mise/installs/node/"):
+		return "mise use -g node@" + fx
+	case strings.Contains(p, "/.asdf/installs/nodejs/"):
+		return "asdf install nodejs " + fx + " && asdf global nodejs " + fx
+	case strings.Contains(p, "/n/versions/node/"):
+		return "n " + fx
+	case strings.Contains(p, "/Cellar/node"):
+		return "brew upgrade node"
+	}
+	return ""
+}
+
+// pythonFor names the pip invocation for the environment that owns a site-packages directory.
+func pythonFor(real string) string {
+	p := filepath.ToSlash(real)
+	i := strings.Index(p, "/site-packages/")
+	if i < 0 {
+		return ""
+	}
+	lib := p[:i] // .../lib/python3.13
+	ver := path.Base(lib)
+	if !strings.HasPrefix(ver, "python3") {
+		return ""
+	}
+	root := path.Dir(path.Dir(lib)) // venv root, ~/.local, /usr/local
+	if strings.HasSuffix(root, "/.local") {
+		return ver + " -m pip install --user"
+	}
+	if b := root + "/bin/" + ver; fileExists(b) {
+		return b + " -m pip install"
+	}
+	if b := root + "/bin/python"; fileExists(b) {
+		return b + " -m pip install"
+	}
+	return ""
+}
+
+func fileExists(p string) bool { _, err := os.Stat(p); return err == nil }
+
+// npmGlobalPkg returns the package name for files inside a global node_modules tree.
+func npmGlobalPkg(real string) string {
+	p := filepath.ToSlash(real)
+	i := strings.Index(p, "/lib/node_modules/")
+	if i < 0 || strings.Contains(p, "/.pnpm/") {
+		return ""
+	}
+	rest := strings.Split(p[i+len("/lib/node_modules/"):], "/")
+	if len(rest) > 1 && strings.HasPrefix(rest[0], "@") {
+		return rest[0] + "/" + rest[1]
+	}
+	return rest[0]
 }
