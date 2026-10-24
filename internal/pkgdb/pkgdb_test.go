@@ -3,6 +3,7 @@ package pkgdb
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -40,6 +41,9 @@ func fakeRoot(t *testing.T, osRelease, list, status string) {
 }
 
 func TestDpkgOwner(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("dpkg paths are Unix paths")
+	}
 	fakeRoot(t, "ID=debian\nVERSION_CODENAME=bookworm\nPRETTY_NAME=\"Debian GNU/Linux 12 (bookworm)\"\n",
 		"/.\n/usr\n/usr/lib/x86_64-linux-gnu/libbrotlidec.so.1.0.9\n",
 		"Package: libbrotli0\nStatus: install ok installed\nVersion: 0.6\n\nPackage: libbrotli1\nStatus: install ok installed\nArchitecture: amd64\nVersion: 1.0.9-2+b6\n\n")

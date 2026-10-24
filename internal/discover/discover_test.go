@@ -20,8 +20,9 @@ exec "$basedir/../lib/pnpm/5/.pnpm/bun@1.4.2/node_modules/bun/bin/bun.exe"   "$@
 	s := NewSet()
 	s.Paths([]string{shim})
 	var found bool
+	want, _ := os.Stat(target)
 	for _, sub := range s.Subjects() {
-		if sub.Real == target {
+		if st, err := os.Stat(sub.Real); err == nil && os.SameFile(st, want) {
 			found = true
 			if sub.Label != "bun 1.4.2 (package)" || sub.Origin != "runtime" {
 				t.Fatalf("label %q origin %q", sub.Label, sub.Origin)

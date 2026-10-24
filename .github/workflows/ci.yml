@@ -55,7 +55,7 @@ jobs:
       - name: libbrotli1 from bookworm-security is fixed, and the report says /usr/bin/node uses it
         run: |
           dpkg-query -W libbrotli1 nodejs
-          CGO_ENABLED=0 go build -o /usr/local/bin/lotstamp ./cmd/lotstamp
+          CGO_ENABLED=0 go build -buildvcs=false -o /usr/local/bin/lotstamp ./cmd/lotstamp
           set +e; lotstamp --no-color --all; code=$?; set -e
           lotstamp --json --all > scan.json
           grep -q '"package": "libbrotli1' scan.json
