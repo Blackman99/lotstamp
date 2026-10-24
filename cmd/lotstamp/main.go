@@ -33,6 +33,7 @@ flags:
   --json             machine-readable report
   --all              also list files that carry no Brotli decoder
   --fail-on LEVEL    behind (default) | unknown | never
+  --json-file FILE   also write the JSON report to FILE (text still goes to stdout)
   --no-color         plain output (NO_COLOR is honoured too)
 
 exit: 0 nothing behind · 3 a decoder is behind (or unknown, with --fail-on unknown) · 1 error · 64 usage
@@ -47,6 +48,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 	all := fs.Bool("all", false, "")
 	noColor := fs.Bool("no-color", false, "")
 	failOn := fs.String("fail-on", "behind", "")
+	jsonFile := fs.String("json-file", "", "")
 	help := fs.Bool("help", false, "")
 	fs.BoolVar(help, "h", false, "")
 	if err := fs.Parse(reorder(args)); err != nil {
@@ -87,6 +89,19 @@ func run(args []string, stdout, stderr io.Writer) int {
 	res := scan.Run(a, set.Subjects(), pkgdb.ReadOS())
 	took := time.Since(start)
 
+	if *jsonFile != "" {
+		f, err := os.Create(*jsonFile)
+		if err == nil {
+			err = report.JSON(f, version, a, res, scope, *all, set.Notes)
+			if cerr := f.Close(); err == nil {
+				err = cerr
+			}
+		}
+		if err != nil {
+			fmt.Fprintf(stderr, "lotstamp: --json-file: %v\n", err)
+			return 1
+		}
+	}
 	if *jsonOut {
 		if err := report.JSON(stdout, version, a, res, scope, *all, set.Notes); err != nil {
 			fmt.Fprintf(stderr, "lotstamp: %v\n", err)
@@ -127,7 +142,7 @@ func reorder(args []string) []string {
 		}
 		if strings.HasPrefix(a, "-") && len(a) > 1 {
 			flags = append(flags, a)
-			if (a == "--fail-on" || a == "-fail-on") && i+1 < len(args) {
+			if (a == "--fail-on" || a == "-fail-on" || a == "--json-file" || a == "-json-file") && i+1 < len(args) {
 				flags = append(flags, args[i+1])
 				i++
 			}

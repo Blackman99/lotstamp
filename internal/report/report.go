@@ -80,9 +80,12 @@ func Text(w io.Writer, a *advisory.Advisory, r scan.Result, s Style, scope strin
 		}
 	}
 	if len(parts) > 0 {
-		fmt.Fprintf(w, "\n%s decoders: %s", s.c("1", "total"), strings.Join(parts, " · "))
+		if shown == 0 || len(notes)+len(r.Errors) > 0 {
+			fmt.Fprintln(w) // findings already end with a blank line
+		}
+		fmt.Fprintf(w, "%s decoders: %s", s.c("1", "total"), strings.Join(parts, " · "))
 		if counts[verdict.Absent] > 0 && !s.All {
-			fmt.Fprint(w, s.c("2", fmt.Sprintf("   (%d more files have no decoder; --all lists them)", counts[verdict.Absent])))
+			fmt.Fprint(w, s.c("2", fmt.Sprintf("   (%s no decoder; --all lists them)", map[bool]string{true: "1 more file has", false: fmt.Sprintf("%d more files have", counts[verdict.Absent])}[counts[verdict.Absent] == 1])))
 		}
 		fmt.Fprintln(w)
 	}

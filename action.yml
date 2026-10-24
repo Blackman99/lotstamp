@@ -37,8 +37,7 @@ runs:
         bin="$RUNNER_TEMP/lotstamp-bin/lotstamp"
         report="$RUNNER_TEMP/lotstamp.json"
         set -f; args=($PATHS); set +f
-        "$bin" --json --fail-on never "${args[@]}" > "$report"
+        set +e; "$bin" --fail-on "$FAIL_ON" --json-file "$report" "${args[@]}" | tee "$RUNNER_TEMP/lotstamp.txt"; code=${PIPESTATUS[0]}; set -e
         echo "report=$report" >> "$GITHUB_OUTPUT"
-        set +e; "$bin" --fail-on "$FAIL_ON" "${args[@]}" | tee "$RUNNER_TEMP/lotstamp.txt"; code=${PIPESTATUS[0]}; set -e
         { echo '### lotstamp'; echo '```'; sed 's/\x1b\[[0-9;]*m//g' "$RUNNER_TEMP/lotstamp.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
         exit $code
