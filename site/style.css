@@ -135,16 +135,20 @@ main{padding-top:40px}
   .hero{grid-template-columns:minmax(0,1fr);text-align:left}
   .pitch{min-width:0}
   .bigegg{width:min(56vw,250px);margin:0 auto -10px}
-  .chart,.chart.flip{grid-template-columns:1fr}
+  .chart,.chart.flip{grid-template-columns:minmax(0,1fr)}
   .chart .plate,.chart.flip .plate{order:0;width:min(60vw,260px);margin:0 auto}
   .gradelist{grid-template-columns:1fr 1fr}
-  .run{grid-template-columns:1fr}
+  .run{grid-template-columns:minmax(0,1fr)}
   .belt{height:250px}
   .egg{width:78px;height:100px}
   .ledger{grid-template-columns:1fr 1fr}
   .topbar .bay{display:none}
 }
 @media (max-width:520px){
+  .chart>*{min-width:0}
+  .names tbody{display:block}
+  .names td{overflow-wrap:anywhere}
+
   body{font-size:16px}
   .gradelist{grid-template-columns:1fr}
   .gradelist li{display:grid;grid-template-columns:72px 1fr;gap:4px 14px;align-items:start}
