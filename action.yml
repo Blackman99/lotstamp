@@ -1,0 +1,44 @@
+name: lotstamp Brotli decoder check
+description: Fail the job if a Node, Bun, Electron or AI tool binary still carries the CVE-2026-111497 Brotli decoder
+author: Blackman99
+branding:
+  icon: shield
+  color: orange
+inputs:
+  paths:
+    description: Files or folders to read (build output, unpacked app, image rootfs). Empty means the runner itself.
+    default: ''
+  fail-on:
+    description: behind (default), unknown (also fail on packed AppImages), or never
+    default: behind
+  version:
+    description: lotstamp release tag to use, or latest
+    default: latest
+outputs:
+  report:
+    description: Path of the JSON report
+    value: ${{ steps.run.outputs.report }}
+runs:
+  using: composite
+  steps:
+    - name: install lotstamp (checksum checked)
+      shell: bash
+      env:
+        LOTSTAMP_BIN: ${{ runner.temp }}/lotstamp-bin
+        LOTSTAMP_VERSION: ${{ inputs.version }}
+      run: sh "${{ github.action_path }}/site/install.sh"
+    - id: run
+      name: read the decoders
+      shell: bash
+      env:
+        PATHS: ${{ inputs.paths }}
+        FAIL_ON: ${{ inputs.fail-on }}
+      run: |
+        bin="$RUNNER_TEMP/lotstamp-bin/lotstamp"
+        report="$RUNNER_TEMP/lotstamp.json"
+        set -f; args=($PATHS); set +f
+        "$bin" --json --fail-on never "${args[@]}" > "$report"
+        echo "report=$report" >> "$GITHUB_OUTPUT"
+        set +e; "$bin" --fail-on "$FAIL_ON" "${args[@]}" | tee "$RUNNER_TEMP/lotstamp.txt"; code=${PIPESTATUS[0]}; set -e
+        { echo '### lotstamp'; echo '```'; sed 's/\x1b\[[0-9;]*m//g' "$RUNNER_TEMP/lotstamp.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+        exit $code

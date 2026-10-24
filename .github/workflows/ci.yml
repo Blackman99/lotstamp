@@ -1,0 +1,62 @@
+name: CI
+on:
+  push: {branches: [main]}
+  pull_request:
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      CGO_ENABLED: '0'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with: {go-version-file: go.mod}
+      - if: runner.os == 'Linux'
+        run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+      - run: go vet ./...
+      - run: go test ./...
+      - name: scan this runner (read-only; behind is allowed here, crashes are not)
+        shell: bash
+        run: |
+          go build -o ls.exe ./cmd/lotstamp
+          ./ls.exe version
+          set +e; ./ls.exe --no-color; code=$?; set -e
+          echo "exit $code"; test "$code" = 0 -o "$code" = 3
+          ./ls.exe --json > scan.json && python3 -c "import json; d=json.load(open('scan.json')); print(d['files_read'], 'files read')" || python -c "import json; d=json.load(open('scan.json')); print(d['files_read'], 'files read')"
+  real-runtimes:
+    name: real Node, Bun and Debian libbrotli bytes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with: {go-version-file: go.mod}
+      - run: sh scripts/fetch-real.sh "$RUNNER_TEMP/real"
+      - run: LOTSTAMP_DOGFOOD="$RUNNER_TEMP/real" go test ./cmd/lotstamp -run Dogfood -v
+      - name: the full report over all of them
+        run: |
+          go build -o lotstamp ./cmd/lotstamp
+          set +e; ./lotstamp --no-color "$RUNNER_TEMP/real"; code=$?; set -e
+          test "$code" = 3
+  debian-system-node:
+    name: Debian 12 node from apt uses the system libbrotli
+    runs-on: ubuntu-latest
+    container: debian:bookworm
+    steps:
+      - run: apt-get update -qq && apt-get install -y -qq --no-install-recommends nodejs ca-certificates curl git >/dev/null
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with: {go-version-file: go.mod}
+      - name: libbrotli1 from bookworm-security is fixed, and the report says /usr/bin/node uses it
+        run: |
+          dpkg-query -W libbrotli1 nodejs
+          CGO_ENABLED=0 go build -o /usr/local/bin/lotstamp ./cmd/lotstamp
+          set +e; lotstamp --no-color --all; code=$?; set -e
+          lotstamp --json --all > scan.json
+          grep -q '"package": "libbrotli1' scan.json
+          grep -q '/usr/bin/node' scan.json

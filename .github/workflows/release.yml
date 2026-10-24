@@ -1,0 +1,33 @@
+name: Release
+on:
+  push: {tags: ['v*']}
+permissions: {contents: write}
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with: {fetch-depth: 0}
+      - uses: actions/setup-go@v6
+        with: {go-version-file: go.mod}
+      - name: tag matches the version in main.go
+        run: grep -q "var version = \"${GITHUB_REF_NAME#v}\"" cmd/lotstamp/main.go
+      - run: go test ./...
+      - uses: goreleaser/goreleaser-action@v6
+        with: {version: '~> v2', args: release --clean}
+        env: {GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'}
+  verify:
+    needs: goreleaser
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: install.sh from the release, checksum checked, binary runs
+        run: |
+          sleep 5
+          LOTSTAMP_BIN="$PWD/bin" sh site/install.sh
+          ./bin/lotstamp version | grep -q "${GITHUB_REF_NAME#v}"
+          set +e; ./bin/lotstamp --no-color; code=$?; set -e
+          test "$code" = 0 -o "$code" = 3
