@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>lotstamp: which copy of the Brotli decoder still carries CVE-2026-111497?</title>
+<meta name="description" content="A single Go binary that reads the Brotli decoder inside every Node, Bun, Electron app, Python package and AI coding tool on your machine and says which still carry CVE-2026-111497 (Node2Shell). It never executes them.">
+<link rel="canonical" href="https://blackman99.github.io/lotstamp/">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="img/logo-512.png">
+<meta name="theme-color" content="#1b2a6b">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="lotstamp">
+<meta property="og:title" content="lotstamp: version strings said 6 of 8 AI tools were exposed. The decoder said 0.">
+<meta property="og:description" content="Reads the Brotli decoder inside every Node, Bun, Electron app and AI coding tool on your machine and tells you which still carry CVE-2026-111497. Executes nothing.">
+<meta property="og:url" content="https://blackman99.github.io/lotstamp/">
+<meta property="og:image" content="https://blackman99.github.io/lotstamp/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Eggs on a candling belt. Each is stamped with a Node version; held over the light, the stamp NODE 24.19.0 turns out clean and a Bun 1.4.3 egg shows a blood spot.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="lotstamp: version strings said 6 of 8 AI tools were exposed. The decoder said 0.">
+<meta name="twitter:description" content="Reads the Brotli decoder inside every runtime and AI coding tool on your machine. CVE-2026-111497, without executing anything.">
+<meta name="twitter:image" content="https://blackman99.github.io/lotstamp/og.png">
+<meta name="twitter:image:alt" content="Eggs on a candling belt, stamped with Node versions, graded by what the light shows inside.">
+<link rel="preload" href="fonts/Gluten.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/Onest.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/SometypeMono.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="room">
+  <div class="topbar">
+    <span class="bay">Candling room · lot CVE-2026-111497</span>
+    <nav aria-label="site"><a href="docs/">Docs</a><a href="#grades">Grades</a><a href="https://github.com/Blackman99/lotstamp">GitHub</a></nav>
+  </div>
+
+  <div class="hero">
+    <div class="bigegg" aria-hidden="true">
+      <svg viewBox="0 0 400 500" id="bigegg"></svg>
+    </div>
+    <div class="pitch">
+      <h1><span class="sr">lotstamp</span><span aria-hidden="true">lotstamp</span></h1>
+      <p class="say">Node2Shell is patched. Is the copy <em>you</em> run?</p>
+      <p class="sub">lotstamp reads the Brotli decoder inside every Node, Bun, Electron app, Python package and AI coding tool on your machine, and says which still carry CVE-2026-111497. It opens files read-only. It executes nothing.</p>
+      <div class="cmd"><code id="installcmd">curl -fsSL https://blackman99.github.io/lotstamp/install.sh | sh</code><button type="button" data-copy="installcmd">Copy</button></div>
+      <p class="hint">then <code>lotstamp</code> · Linux, macOS, Windows · one Go binary · <a href="docs/#install">other ways</a></p>
+    </div>
+  </div>
+
+  <section class="belt-wrap" aria-labelledby="belttitle">
+    <div class="belt-head">
+      <h2 id="belttitle" class="belt-title">On the belt: <span id="settitle">8 AI coding tools, latest Linux x64 builds</span></h2>
+      <div class="switch" role="group" aria-label="which lot">
+        <button type="button" data-set="tools" aria-pressed="true">8 AI tools, latest</button>
+        <button type="button" data-set="box" aria-pressed="false">the box this was built on</button>
+        <button type="button" id="replay" class="replay">replay</button>
+      </div>
+    </div>
+    <div class="belt" id="belt">
+      <svg class="halo" viewBox="0 0 240 60" aria-hidden="true"><ellipse cx="120" cy="40" rx="118" ry="20" fill="#2c3d86"/><ellipse cx="120" cy="40" rx="84" ry="14" fill="#5a5a7a"/><ellipse cx="120" cy="40" rx="56" ry="9" fill="#a88a5a"/><ellipse cx="120" cy="40" rx="30" ry="5" fill="#ffd27a"/></svg>
+      <div class="eggs" id="eggs"></div>
+      <svg class="rollers" id="rollers" aria-hidden="true"></svg>
+      <div class="slot" aria-hidden="true"><span>light</span></div>
+      <div class="tray" id="tray" aria-hidden="true"><span>recall</span></div>
+    </div>
+    <p class="tally" id="tally" aria-live="polite">&nbsp;</p>
+    <ol class="ledger" id="ledger" aria-label="grading ledger"></ol>
+  </section>
+</header>
+
+<main id="main">
+<section class="chart" id="fingerprint">
+  <div class="plate">
+    <svg viewBox="0 0 360 440" class="plate-egg" data-egg="fixed-table" aria-hidden="true"></svg>
+  </div>
+  <div class="text">
+    <p class="kicker">Plate 1 · what the light shows</p>
+    <h2>The fix left a fingerprint in every binary</h2>
+    <p>The CVE-2026-111497 fix (Brotli 1.2.1, backported as 1.1.1 and 1.0.10) adds one new error code, <code>BROTLI_DECODER_ERROR_FORMAT_BLOCK_SWITCH</code> (-17). The decoder keeps a table of its error names as strings, so the fix is visible in the compiled code: a pre-fix decoder has 16 <code>FORMAT_</code> names, a fixed one has 17.</p>
+    <p>lotstamp streams each file once, finds that table and checks for the 17th name. Nothing is run, so a 300 MB Electron binary takes about a second, and a hostile binary gets no chance to act.</p>
+    <table class="names" aria-label="decoder error names">
+      <tbody id="names"></tbody>
+    </table>
+  </div>
+</section>
+
+<div class="divider" aria-hidden="true"></div>
+
+<section class="chart flip" id="bun">
+  <div class="plate">
+    <svg viewBox="0 0 360 440" class="plate-egg" data-egg="bun" aria-hidden="true"></svg>
+  </div>
+  <div class="text">
+    <p class="kicker">Plate 2 · the stamp lies one way</p>
+    <h2>Every Bun binary says “Node 26.3.0”</h2>
+    <p>Bun embeds the URL <code>nodejs.org/download/release/v26.3.0/node-v26.3.0-headers.tar.gz</code>, its Node-compat level. A check that greps for the Node version calls Claude Code 2.1.310 and OpenCode 1.19.4 vulnerable, because 26.3.0 is older than 26.12.1.</p>
+    <p>Neither runs Node. Both run Bun 1.4.4, which shipped the fix on 22 Oct. lotstamp reads the Bun version too, and reports the stamp only as a note: <code>version contains a Node 26.3.0 headers URL · but that is Bun's Node-compat level</code>.</p>
+  </div>
+</section>
+
+<div class="divider" aria-hidden="true"></div>
+
+<section class="chart" id="electron">
+  <div class="plate">
+    <svg viewBox="0 0 360 440" class="plate-egg" data-egg="electron" aria-hidden="true"></svg>
+  </div>
+  <div class="text">
+    <p class="kicker">Plate 3 · and the other way</p>
+    <h2>Cursor embeds Node 24.19.0, and is fixed anyway</h2>
+    <p>Electron builds Node against Chromium's copy of Brotli, not Node's (<code>deps/brotli</code> is swapped for <code>//third_party/brotli:dec</code> in Electron's GN patch). Chromium took the upstream fix in M148, months before the CVE was published.</p>
+    <p>So Cursor 3.27.12, Windsurf 1.126.0, VS Code 1.143.1 and Kiro 1.4.26 all embed a Node older than 24.22.1, and all four carry the 17th name. Reading the stamp, you would file four tickets. Reading the decoder, none.</p>
+  </div>
+</section>
+
+<div class="divider" aria-hidden="true"></div>
+
+<section class="chart flip" id="shared">
+  <div class="plate">
+    <svg viewBox="0 0 360 440" class="plate-egg" data-egg="shared" aria-hidden="true"></svg>
+  </div>
+  <div class="text">
+    <p class="kicker">Plate 4 · the egg behind the egg</p>
+    <h2>Debian's node doesn't carry a decoder at all</h2>
+    <p>Debian builds Node with <code>--shared-brotli</code>. <code>/usr/bin/node</code> is 26 KB; the code lives in <code>libnode.so.115</code>, which links <code>libbrotlidec.so.1</code>. Upgrading Node does nothing here. The fix is <code>libbrotli1 1.1.0-2+deb13u1</code> (DSA-6582-1).</p>
+    <p>Naive string scanners trip here too: libnode holds the 16 pre-fix names as <code>zlib.constants</code> strings, frozen from the headers at build time. Grade libnode and it stays BEHIND after you install the fixed libbrotli1. lotstamp sees the dynamic link, grades the library that actually decodes, and prints <code>used by /usr/bin/node (Node 20.19.2) via libnode.so.115 → libbrotlidec.so.1</code>.</p>
+  </div>
+</section>
+
+<div class="divider" aria-hidden="true"></div>
+
+<section class="chart" id="vendor">
+  <div class="plate">
+    <svg viewBox="0 0 360 440" class="plate-egg" data-egg="vendor" aria-hidden="true"></svg>
+  </div>
+  <div class="text">
+    <p class="kicker">Plate 5 · the one nobody stamps</p>
+    <h2>A pre-fix decoder inside VS Code that isn't Node</h2>
+    <p>VS Code 1.143.1 ships <code>@vscode/vsce-sign</code>, a .NET NativeAOT program used to verify extension signatures. It has Brotli compiled in, and it is pre-fix: 16 names, no BLOCK_SWITCH. Whether untrusted Brotli data can ever reach it depends on the program, so lotstamp says so and marks it <b>who: vendor</b>.</p>
+    <p>No version check finds this one. There is no Node version to read.</p>
+  </div>
+</section>
+
+<section class="grades" id="grades" aria-labelledby="gradestitle">
+  <h2 id="gradestitle">The grading chart</h2>
+  <p class="grades-sub">Each decoder gets one grade, a fix command and who has to act: you, the vendor or your distro.</p>
+  <ul class="gradelist">
+    <li><svg viewBox="0 0 120 150" data-mini="FIXED" aria-hidden="true"></svg><b class="g g-fixed">FIXED</b><span>BLOCK_SWITCH is in the decoder, or the distro package is at its fixed version.</span><code>exit 0</code></li>
+    <li><svg viewBox="0 0 120 150" data-mini="BEHIND" aria-hidden="true"></svg><b class="g g-behind">BEHIND</b><span>Pre-fix decoder code. The fix line names the release that has it.</span><code>exit 3</code></li>
+    <li><svg viewBox="0 0 120 150" data-mini="NO-FIX-LINE" aria-hidden="true"></svg><b class="g g-behind">NO-FIX-LINE</b><span>Pre-fix, on a Node line that gets no release (20, 21, 23, 25). Move lines.</span><code>exit 3</code></li>
+    <li><svg viewBox="0 0 120 150" data-mini="UNKNOWN" aria-hidden="true"></svg><b class="g g-unknown">UNKNOWN</b><span>Light can't get in: an AppImage or packed payload. Extract it and scan again.</span><code>exit 0, or 3 with --fail-on unknown</code></li>
+  </ul>
+</section>
+
+<section class="run" id="run" aria-labelledby="runtitle">
+  <div class="runcol">
+    <h2 id="runtitle">Run it</h2>
+    <pre class="slipcode"><code><span class="c"># the places runtimes hide: PATH and its shims, nvm/volta/fnm/mise,
+# ~/.bun, npm and pnpm globals, Python envs, app bundles, MCP configs</span>
+lotstamp
+
+<span class="c"># a build artifact, an extracted app, a mounted image</span>
+lotstamp dist/ ./squashfs-root
+
+<span class="c"># for CI and scripts</span>
+lotstamp --json --fail-on unknown dist/</code></pre>
+    <h3>In CI</h3>
+    <pre class="slipcode"><code>- uses: Blackman99/lotstamp@v0
+  with:
+    paths: dist/</code></pre>
+    <p class="small">Fails the job when a <code>bun build --compile</code> output, Node SEA or Electron build still carries the pre-fix decoder.</p>
+  </div>
+  <div class="runcol">
+    <h2>What a slip looks like</h2>
+<pre class="out" aria-label="lotstamp output on the build box"><code><span class="o-b">BEHIND</span>      Brotli decoder library libbrotlidec.so.1.1.0
+            system libbrotli1 1.1.0-2+b7
+    <span class="o-k">decoder</span>  pre-fix code: 16 decoder error names, no BLOCK_SWITCH
+    <span class="o-k">used by</span>  /usr/bin/node (Node 20.19.2)
+             via libnode.so.115 → libbrotlidec.so.1
+        <span class="o-k">fix</span>  sudo apt install --only-upgrade libbrotli1
+             (1.1.0-2+deb13u1, DSA-6582-1)  · who: you
+
+<span class="o-f">FIXED</span>       OpenCode  ~/.local/bin/opencode
+            Bun 1.4.4
+    <span class="o-k">decoder</span>  fixed code: BLOCK_SWITCH present
+    <span class="o-k">version</span>  contains a Node 26.3.0 headers URL
+        <span class="o-k">but</span>  that is Bun's Node-compat level
+
+total decoders: <span class="o-b">5 behind</span> · <span class="o-f">3 fixed</span></code></pre>
+    <p class="small">Real output from the Debian 13 box lotstamp was built on, two of its eight findings, wrapped to fit. <a href="demo.json">demo.json</a> has the rest.</p>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <svg class="foot-rollers" id="footrollers" aria-hidden="true"></svg>
+  <div class="foot-in">
+    <img src="img/logo.svg" alt="" width="56" height="56">
+    <p><b>lotstamp</b> · MIT · reads, never runs · <a href="docs/">Docs</a> · <a href="docs/#faq">FAQ</a> · <a href="https://github.com/Blackman99/lotstamp">GitHub</a> · <a href="https://github.com/Blackman99/lotstamp/blob/main/internal/advisory/CVE-2026-111497.json">advisory data</a></p>
+    <p class="small">The 8-tool lot is the latest Linux x64 build of each tool, downloaded 24 Oct 2026. Versions on your machine may differ, which is the point.</p>
+  </div>
+</footer>
+<script src="app.js" defer></script>
+</body>
+</html>

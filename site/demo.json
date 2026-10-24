@@ -1,0 +1,212 @@
+{
+ "generated": "2026-10-24 · lotstamp 0.1.0 · Linux x64",
+ "sets": {
+  "tools": {
+   "title": "8 AI coding tools, latest Linux x64 builds (downloaded 2026-10-24)",
+   "eggs": [
+    {
+     "name": "Claude Code 2.1.310",
+     "stamp": "NODE 26.3.0",
+     "status": "FIXED",
+     "runtime": "Bun 1.4.4",
+     "decoder": "fixed code: BLOCK_SWITCH present (17 decoder error names)",
+     "version_says": "contains a Node 26.3.0 headers URL",
+     "but": "that is Bun's Node-compat level; the runtime is Bun 1.4.4",
+     "path": "…/claude-2.1.310",
+     "fix": "",
+     "who": "",
+     "used_by": []
+    },
+    {
+     "name": "OpenCode 1.19.4",
+     "stamp": "NODE 26.3.0",
+     "status": "FIXED",
+     "runtime": "Bun 1.4.4",
+     "decoder": "fixed code: BLOCK_SWITCH present (17 decoder error names)",
+     "version_says": "contains a Node 26.3.0 headers URL",
+     "but": "that is Bun's Node-compat level; the runtime is Bun 1.4.4",
+     "path": "…/oc/opencode",
+     "fix": "",
+     "who": "",
+     "used_by": []
+    },
+    {
+     "name": "Copilot CLI",
+     "stamp": "NODE 24.22.1",
+     "status": "FIXED",
+     "runtime": "Node 24.22.1",
+     "decoder": "fixed code: BLOCK_SWITCH present (17 decoder error names)",
+     "version_says": "",
+     "but": "",
+     "path": "…/copilot/copilot",
+     "fix": "",
+     "who": "",
+     "used_by": []
+    },
+    {
+     "name": "Cursor agent CLI",
+     "stamp": "NODE 24.22.1",
+     "status": "FIXED",
+     "runtime": "Node 24.22.1",
+     "decoder": "fixed code: BLOCK_SWITCH present (17 decoder error names)",
+     "version_says": "",
+     "but": "",
+     "path": "…/cagent/dist-package/cursor-agent-sea",
+     "fix": "",
+     "who": "",
+     "used_by": []
+    },
+    {
+     "name": "Cursor 3.27.12",
+     "stamp": "NODE 24.19.0",
+     "status": "FIXED",
+     "runtime": "Electron 42.11.16 · Chromium 148 · Node 24.19.0",
+     "decoder": "fixed code: BLOCK_SWITCH present (17 decoder error names)",
+     "version_says": "embeds Node 24.19.0 (fix is 24.22.1)",
+     "but": "Electron builds Node against Chromium's Brotli, and Chromium 148 already has the fix",
+     "path": "…/cursor-root/usr/share/cursor/cursor",
+     "fix": "",
+     "who": "",
+     "used_by": []
+    },
+    {
+     "name": "Windsurf 1.126.0",
+     "stamp": "NODE 24.19.0",
+     "status": "FIXED",
+     "runtime": "Electron 42.11.16 · Chromium 148 · Node 24.19.0",
+     "decoder": "fixed code: BLOCK_SWITCH present (17 decoder error names)",
+     "version_says": "embeds Node 24.19.0 (fix is 24.22.1)",
+     "but": "Electron builds Node against Chromium's Brotli, and Chromium 148 already has the fix",
+     "path": "…/windsurf/Devin/devin-desktop",
+     "fix": "",
+     "who": "",
+     "used_by": []
+    },
+    {
+     "name": "VS Code 1.143.1",
+     "stamp": "NODE 24.21.0",
+     "status": "FIXED",
+     "runtime": "Electron 43.7.7 · Chromium 150 · Node 24.21.0",
+     "decoder": "fixed code: BLOCK_SWITCH present (17 decoder error names)",
+     "version_says": "embeds Node 24.21.0 (fix is 24.22.1)",
+     "but": "Electron builds Node against Chromium's Brotli, and Chromium 150 already has the fix",
+     "path": "…/VSCode-linux-x64/code",
+     "fix": "",
+     "who": "",
+     "used_by": []
+    },
+    {
+     "name": "Kiro 1.4.26",
+     "stamp": "NODE 24.21.0",
+     "status": "FIXED",
+     "runtime": "Electron 44.4.3 · Chromium 152 · Node 24.21.0",
+     "decoder": "fixed code: BLOCK_SWITCH present (17 decoder error names)",
+     "version_says": "embeds Node 24.21.0 (fix is 24.22.1)",
+     "but": "Electron builds Node against Chromium's Brotli, and Chromium 152 already has the fix",
+     "path": "…/kiro/Kiro/kiro",
+     "fix": "",
+     "who": "",
+     "used_by": []
+    }
+   ]
+  },
+  "box": {
+   "title": "the machine this was built on (one Debian 13 box)",
+   "eggs": [
+    {
+     "name": "Claude Code (npm, stale)",
+     "stamp": "NODE 26.3.0",
+     "status": "BEHIND",
+     "runtime": "Bun 1.4.0",
+     "decoder": "pre-fix code: 16 decoder error names, no BLOCK_SWITCH",
+     "version_says": "contains a Node 26.3.0 headers URL",
+     "but": "that is Bun's Node-compat level; the runtime is Bun 1.4.0",
+     "path": "~/.local/lib/node_modules/@anthropic-ai/claude-code/bin/claude.exe",
+     "fix": "update Claude Code (npm); if the latest still reads BEHIND, the vendor has to ship a rebuild (Bun 1.4.4 or newer has the fix)",
+     "who": "vendor",
+     "used_by": []
+    },
+    {
+     "name": "Python brotli 1.2.0",
+     "stamp": "brotli 1.2.0",
+     "status": "BEHIND",
+     "runtime": "Python brotli 1.2.0",
+     "decoder": "pre-fix code: 16 decoder error names, no BLOCK_SWITCH",
+     "version_says": "",
+     "but": "",
+     "path": "~/.local/lib/python3.13/site-packages/_brotli.cpython-313-x86_64-linux-gnu.so",
+     "fix": "pip install -U 'brotli>=1.2.1' in that environment",
+     "who": "you",
+     "used_by": []
+    },
+    {
+     "name": "system libbrotlidec",
+     "stamp": "libbrotli1 1.1.0-2+b7",
+     "status": "BEHIND",
+     "runtime": "system libbrotli1 1.1.0-2+b7",
+     "decoder": "pre-fix code: 16 decoder error names, no BLOCK_SWITCH",
+     "version_says": "",
+     "but": "",
+     "path": "/usr/lib/x86_64-linux-gnu/libbrotlidec.so.1.1.0",
+     "fix": "sudo apt update && sudo apt install --only-upgrade libbrotli1  (fixed in 1.1.0-2+deb13u1, DSA-6582-1)",
+     "who": "you",
+     "used_by": [
+      "/usr/bin/node (Node 20.19.2)  via libnode.so.115 → libbrotlidec.so.1"
+     ]
+    },
+    {
+     "name": "bun (pnpm global)",
+     "stamp": "NODE 26.3.0",
+     "status": "BEHIND",
+     "runtime": "Bun 1.4.2",
+     "decoder": "pre-fix code: 16 decoder error names, no BLOCK_SWITCH",
+     "version_says": "contains a Node 26.3.0 headers URL",
+     "but": "that is Bun's Node-compat level; the runtime is Bun 1.4.2",
+     "path": "/usr/local/lib/pnpm/5/.pnpm/bun@1.4.2/node_modules/bun/bin/bun.exe",
+     "fix": "upgrade Bun: bun upgrade, or reinstall it the way you installed it (Bun 1.4.4 or newer has the fix)",
+     "who": "you",
+     "used_by": []
+    },
+    {
+     "name": "node (/exec-daemon)",
+     "stamp": "NODE 22.23.4",
+     "status": "FIXED",
+     "runtime": "Node 22.23.4",
+     "decoder": "fixed code: BLOCK_SWITCH present (17 decoder error names)",
+     "version_says": "",
+     "but": "",
+     "path": "/exec-daemon/node",
+     "fix": "",
+     "who": "",
+     "used_by": []
+    },
+    {
+     "name": "OpenCode",
+     "stamp": "NODE 26.3.0",
+     "status": "FIXED",
+     "runtime": "Bun 1.4.4",
+     "decoder": "fixed code: BLOCK_SWITCH present (17 decoder error names)",
+     "version_says": "contains a Node 26.3.0 headers URL",
+     "but": "that is Bun's Node-compat level; the runtime is Bun 1.4.4",
+     "path": "~/.local/lib/node_modules/opencode-ai/bin/opencode.exe",
+     "fix": "",
+     "who": "",
+     "used_by": []
+    },
+    {
+     "name": "OpenCode (baseline)",
+     "stamp": "NODE 26.3.0",
+     "status": "FIXED",
+     "runtime": "Bun 1.4.4",
+     "decoder": "fixed code: BLOCK_SWITCH present (17 decoder error names)",
+     "version_says": "contains a Node 26.3.0 headers URL",
+     "but": "that is Bun's Node-compat level; the runtime is Bun 1.4.4",
+     "path": "~/.local/lib/node_modules/opencode-ai/node_modules/opencode-linux-x64-baseline/bin/opencode",
+     "fix": "",
+     "who": "",
+     "used_by": []
+    }
+   ]
+  }
+ }
+}
