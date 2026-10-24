@@ -178,11 +178,11 @@ func TestDogfood(t *testing.T) {
 		t.Skip("LOTSTAMP_DOGFOOD not set")
 	}
 	want := map[string]string{
-		"node-v24.22.0-linux-x64/bin/node": "BEHIND",
-		"node-v24.22.1-linux-x64/bin/node": "FIXED",
-		"node-v20.19.5-linux-x64/bin/node": "NO-FIX-LINE",
-		"bun-1.4.3/bun-linux-x64/bun":      "BEHIND",
-		"bun-1.4.4/bun-linux-x64/bun":      "FIXED",
+		"node-v24.22.0-linux-x64/bin/node":                                                "BEHIND",
+		"node-v24.22.1-linux-x64/bin/node":                                                "FIXED",
+		"node-v20.19.5-linux-x64/bin/node":                                                "NO-FIX-LINE",
+		"bun-1.4.3/bun-linux-x64/bun":                                                     "BEHIND",
+		"bun-1.4.4/bun-linux-x64/bun":                                                     "FIXED",
 		"deb/x-libbrotli1_1.0.9-2+b6/usr/lib/x86_64-linux-gnu/libbrotlidec.so.1.0.9":      "BEHIND",
 		"deb/x-libbrotli1_1.0.9-2+deb12u1/usr/lib/x86_64-linux-gnu/libbrotlidec.so.1.0.9": "FIXED",
 	}

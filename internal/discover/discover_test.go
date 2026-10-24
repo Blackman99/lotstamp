@@ -50,12 +50,12 @@ func TestHardLinksAreOneFile(t *testing.T) {
 
 func TestLabels(t *testing.T) {
 	for p, want := range map[string]string{
-		"/home/u/.local/share/claude/versions/2.1.310":                                          "Claude Code 2.1.310",
-		"/usr/lib/node_modules/@anthropic-ai/claude-code/bin/claude.exe":                        "Claude Code (npm)",
-		"/opt/VSCode-linux-x64/code":                                                            "VS Code",
+		"/home/u/.local/share/claude/versions/2.1.310":                                                   "Claude Code 2.1.310",
+		"/usr/lib/node_modules/@anthropic-ai/claude-code/bin/claude.exe":                                 "Claude Code (npm)",
+		"/opt/VSCode-linux-x64/code":                                                                     "VS Code",
 		"/opt/VSCode-linux-x64/resources/app/node_modules.asar.unpacked/@vscode/vsce-sign/bin/vsce-sign": "VS Code · vsce-sign",
-		"/opt/node-v24.22.0-linux-x64/bin/node":                                                 "node 24.22.0 tarball",
-		"/usr/bin/somethingelse":                                                                "somethingelse",
+		"/opt/node-v24.22.0-linux-x64/bin/node":                                                          "node 24.22.0 tarball",
+		"/usr/bin/somethingelse":                                                                         "somethingelse",
 	} {
 		if got := Label(p); got != want {
 			t.Errorf("Label(%s) = %q, want %q", p, got, want)
