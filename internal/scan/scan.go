@@ -3,12 +3,14 @@
 package scan
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Blackman99/lotstamp/internal/advisory"
 	"github.com/Blackman99/lotstamp/internal/discover"
@@ -165,7 +167,11 @@ func probeAll(subs []verdict.Subject, opts probe.Options) []item {
 		go func() {
 			defer wg.Done()
 			for i := range ch {
+				t0 := time.Now()
 				ev, err := probe.File(subs[i].Real, opts)
+				if os.Getenv("LOTSTAMP_TRACE") != "" {
+					fmt.Fprintf(os.Stderr, "lotstamp trace: read %v %s\n", time.Since(t0).Round(time.Millisecond), subs[i].Real)
+				}
 				items[i] = item{sub: subs[i], ev: ev, err: err}
 			}
 		}()

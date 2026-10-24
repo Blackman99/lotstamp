@@ -4,13 +4,16 @@
 package discover
 
 import (
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/Blackman99/lotstamp/internal/probe"
 	"github.com/Blackman99/lotstamp/internal/verdict"
@@ -151,6 +154,9 @@ func Interesting(path string, info fs.FileInfo) bool {
 		strings.HasSuffix(base, ".bin") || strings.HasSuffix(base, ".node") {
 		return false
 	}
+	if runtime.GOOS == "windows" && !strings.HasSuffix(base, ".exe") {
+		return false // DLLs other than libbrotlidec/libnode don't carry a JS runtime's decoder
+	}
 	return probe.Magic(path) != "other"
 }
 
@@ -233,7 +239,9 @@ func (s *Set) Paths(args []string) {
 
 // Machine adds the default places on this computer.
 func (s *Set) Machine(home string) {
+	t := trace("PATH")
 	s.pathDirs()
+	t("globs")
 	j := func(p ...string) string { return filepath.Join(append([]string{home}, p...)...) }
 	globs := []struct{ pat, via string }{
 		{j(".nvm/versions/node/*/bin/node"), "nvm"},
@@ -272,18 +280,35 @@ func (s *Set) Machine(home string) {
 			}
 		}
 	}
+	t("global packages")
 	// Global JS package trees: native binaries shipped inside npm/pnpm packages.
 	for _, r := range []string{j(".local/lib/node_modules"), "/usr/local/lib/node_modules", "/usr/lib/node_modules",
 		"/opt/homebrew/lib/node_modules", j(".npm-global/lib/node_modules"), "/usr/local/lib/pnpm", j(".local/share/pnpm"),
 		j(".bun/install/global/node_modules"), j("AppData/Roaming/npm/node_modules")} {
 		s.Walk(r, "", "global packages "+r, 9)
 	}
+	t("app bundles")
 	// App bundles.
 	for _, r := range s.appRoots(home) {
 		s.Walk(r, "app", "apps "+filepath.Dir(r), 8)
 	}
+	t("python")
 	s.python(home)
+	t("mcp configs")
 	s.mcp(home)
+	t("")
+}
+
+// trace prints how long each discovery phase took when LOTSTAMP_TRACE is set.
+func trace(first string) func(next string) {
+	if os.Getenv("LOTSTAMP_TRACE") == "" {
+		return func(string) {}
+	}
+	name, start := first, time.Now()
+	return func(next string) {
+		fmt.Fprintf(os.Stderr, "lotstamp trace: %-16s %v\n", name, time.Since(start).Round(time.Millisecond))
+		name, start = next, time.Now()
+	}
 }
 
 func (s *Set) appRoots(home string) []string {
@@ -340,7 +365,7 @@ func looksLikeApp(dir string) bool {
 func (s *Set) pathDirs() {
 	seen := map[string]bool{}
 	for _, d := range filepath.SplitList(os.Getenv("PATH")) {
-		if d == "" || seen[d] {
+		if d == "" || seen[d] || isSystemDir(d) {
 			continue
 		}
 		seen[d] = true
@@ -350,6 +375,14 @@ func (s *Set) pathDirs() {
 		}
 		for _, e := range ents {
 			p := filepath.Join(d, e.Name())
+			if runtime.GOOS == "windows" {
+				// only .exe can be a runtime and only .cmd can be an npm shim; opening every
+				// other file on PATH is slow under on-access antivirus scanning
+				ext := strings.ToLower(filepath.Ext(p))
+				if ext != ".exe" && ext != ".cmd" {
+					continue
+				}
+			}
 			info, err := os.Stat(p) // follows symlinks
 			if err != nil || !info.Mode().IsRegular() {
 				continue
@@ -366,6 +399,20 @@ func (s *Set) pathDirs() {
 }
 
 var shimPath = regexp.MustCompile(`["']?((?:\$\{?basedir\}?|\$\(dirname "\$0"\)|%~dp0|%dp0%|/)[^"'\s]*)["']?`)
+
+// isSystemDir is true for the Windows system folders that sit on every PATH. Nothing in
+// them embeds a Brotli decoder for JavaScript, and they hold thousands of files.
+func isSystemDir(d string) bool {
+	if runtime.GOOS != "windows" {
+		return false
+	}
+	root := os.Getenv("SystemRoot")
+	if root == "" {
+		root = `C:\Windows`
+	}
+	d, root = strings.ToLower(filepath.Clean(d)), strings.ToLower(filepath.Clean(root))
+	return d == root || strings.HasPrefix(d, root+`\`)
+}
 
 func isScript(p string) bool {
 	if strings.HasSuffix(strings.ToLower(p), ".cmd") {
