@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>node -v 不等于你在跑的 Brotli 解码器 · lotstamp</title>
+<meta name="description" content="为什么版本号会在 CVE-2026-111497 上误导人（Bun 的 node-v26.3.0 字符串、Electron 用 Chromium 的 Brotli、Debian 的共享 libbrotlidec），以及错误名表指纹如何工作。Linux x64 实测。">
+<link rel="canonical" href="https://blackman99.github.io/lotstamp/blog/version-strings.zh.html">
+<link rel="alternate" hreflang="en" href="https://blackman99.github.io/lotstamp/blog/version-strings.html">
+<link rel="alternate" hreflang="zh-CN" href="https://blackman99.github.io/lotstamp/blog/version-strings.zh.html">
+<link rel="icon" href="../img/favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#1b2a6b">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="lotstamp">
+<meta property="og:title" content="node -v 不等于你在跑的 Brotli 解码器">
+<meta property="og:description" content="为什么版本号会在 CVE-2026-111497 上误导人（Bun 的 node-v26.3.0 字符串、Electron 用 Chromium 的 Brotli、Debian 的共享 libbrotlidec），以及错误名表指纹如何工作。Linux x64 实测。">
+<meta property="og:url" content="https://blackman99.github.io/lotstamp/blog/version-strings.zh.html">
+<meta property="og:image" content="https://blackman99.github.io/lotstamp/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="../fonts/Onest.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/SometypeMono.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../docs/docs.css">
+</head>
+<body class="docs">
+<header class="topbar">
+  <a class="brand" href="../"><img src="../img/favicon.svg" alt="" width="26" height="26"> lotstamp</a>
+  <nav aria-label="site"><a href="../">Belt</a><a href="../docs/">Docs</a><a href="version-strings.html" hreflang="en">English</a><a href="https://github.com/Blackman99/lotstamp">GitHub</a></nav>
+</header>
+<div class="docwrap">
+<aside class="toc" aria-label="On this page">
+  <p class="tochead">2026-10-24 · Linux x64</p>
+  <ol>
+    <li><a href="#bug">漏洞在库里</a></li>
+    <li><a href="#lies">版本号出错</a></li>
+    <li><a href="#fingerprint">修复的指纹</a></li>
+    <li><a href="#limits">局限</a></li>
+  </ol>
+</aside>
+<main id="main" class="post">
+  <h1><code>node -v</code> 不等于你在跑的 Brotli 解码器</h1>
+  <p class="lede">为什么版本号会在 CVE-2026-111497（Node2Shell）上误导人，以及 lotstamp 怎样用修复编进二进制的一个错误名来判定解码器。下文所有数据都是 2026-10-24 在 Linux x64 上实测的；macOS 和 Windows 还没有在真机上测过。</p>
+
+  <section id="bug">
+    <h2><span>1</span>漏洞在库里，不在版本号里</h2>
+    <p>CVE-2026-111497 是 Brotli C 解码器（<code>c/dec/decode.c</code>）的越界写，影响 Brotli 1.0.3 到 1.2.0，修复版本是 1.0.10、1.1.1、1.2.1（<a href="https://osv.dev/vulnerability/CVE-2026-111497">OSV</a>）。Node 在 2026-10-21 发布 22.23.4、24.22.1、26.12.1 修复；Bun 是 1.4.4；PyPI <code>brotli</code> 是 1.2.1；Debian 是 DSA-6582-1 和 DLA-4855-1。</p>
+    <p>看到这张表，最自然的做法是读 Node 版本号再比较。问题在于，你实际运行的解码器经常不是那个版本号描述的那一份。有人在 <a href="https://github.com/openai/codex/issues/56076">openai/codex#56076</a> 里就 Codex 自带运行时提出了同样的疑问。</p>
+  </section>
+
+  <section id="lies">
+    <h2><span>2</span>版本号出错的三种情况</h2>
+    <h3>Bun 自称 Node 26.3.0</h3>
+    <p>我们读过的每个 Bun 二进制里都有 <code>nodejs.org/download/release/v26.3.0/node-v26.3.0-headers.tar.gz</code> 这个 URL。这是 Bun 的 Node 兼容级别，不是 Node 运行时。按字符串找 Node 版本的检查会把 Claude Code 2.1.310 和 OpenCode 1.19.4 判成「Node 26.3.0，低于 26.12.1，有漏洞」，而它们用的是已修复的 Bun 1.4.4。</p>
+    <h3>Electron 里的 Node 用的是 Chromium 的 Brotli</h3>
+    <p>Electron 编译 Node 时链接 Chromium 自带的 Brotli：<code>build_add_gn_build_files.patch</code> 把 <code>deps/brotli</code> 换成 <code>//third_party/brotli:dec</code>。Chromium 在 M148 把 Brotli 升到 <code>cfa184a</code>（2026-03-18），其中已包含上游提交 <code>0ed4268</code>（2026-02-27，"Detect and report invalid stream earlier"），Brotli 1.2.1 就是 cherry-pick 了这个提交。所以 Cursor 3.27.12、Windsurf 1.126.0（Electron 42，「Node 24.19.0」）、VS Code 1.143.1（Electron 43，「Node 24.21.0」）、Kiro 1.4.26（Electron 44，「Node 24.21.0」）看上去都落后于 24.22.1，实际带的都是修复后的解码器。</p>
+    <h3>Debian 的 node 用系统库</h3>
+    <p>Debian 13 的 <code>/usr/bin/node</code>（v20.19.2）用 <code>--shared-brotli</code> 编译，经 <code>libnode.so.115</code> 调用 <code>libbrotlidec.so.1</code>。这时 Node 版本号说明不了任何事，要看 <code>libbrotli1</code> 包：我们机器上是修复前的 <code>1.1.0-2+b7</code>；<code>1.1.0-2+deb13u1</code> 修复了它，上游版本号却没变。</p>
+    <p>结果：在 8 个 AI 编程工具最新的 Linux x64 版本上，按版本号判断有 <strong>6 个</strong>受影响；读解码器本身，<strong>0 个</strong>。同一台机器上真正修复前的解码器在别处：<code>/usr/bin/node</code> 背后的 Debian 系统库、<code>~/.local</code> 里的 PyPI <code>brotli</code> 1.2.0、一个 npm 装的旧版 Claude Code 2.1.197（Bun 1.4.0），以及 pnpm 装的 Bun 1.4.2。</p>
+  </section>
+
+  <section id="fingerprint">
+    <h2><span>3</span>修复留下的指纹</h2>
+    <p>Brotli 从 v1.2.0 到 v1.2.1 只改了 <code>c/dec/decode.c</code> 和 <code>decode.h</code>。修复新增了一个解码错误 <code>BROTLI_DECODER_ERROR_FORMAT_BLOCK_SWITCH</code>（-17），占用了原来保留的位置。Brotli 为 <code>BrotliDecoderErrorString</code> 维护一张错误名表，所以这个名字会被编进每个带解码器的二进制。1.1.1 和 1.0.10 的回移植也加了它。</p>
+    <table class="kv">
+      <thead><tr><th>解码器</th><th>FORMAT 错误名</th></tr></thead>
+      <tbody>
+        <tr><td>修复前：Node 20.19.5、24.22.0；Bun 1.4.0、1.4.2、1.4.3；Debian 13 libbrotlidec 1.1.0-2+b7；PyPI brotli 1.2.0</td><td>16 个，没有 BLOCK_SWITCH</td></tr>
+        <tr><td>修复后：Node 22.23.4、24.22.1；Bun 1.4.4；Debian 13 1.1.0-2+deb13u1；Debian 12 deb12u1</td><td>17 个，有 BLOCK_SWITCH</td></tr>
+      </tbody>
+    </table>
+    <p>有两个细节让它不只是一次 grep：</p>
+    <ul>
+      <li><strong>两种写法。</strong>Brotli 1.0.x 存的是裸名字（<code>FORMAT_BLOCK_SWITCH</code>），1.1 起是 <code>_ERROR_FORMAT_*</code>。初版曾把 Debian 12 已修复的 1.0.9 回移植判成未修复，读了真实的 .deb 才发现；现在两种写法都匹配。</li>
+      <li><strong>Node 里还有同名常量。</strong><code>zlib.constants</code> 暴露 <code>BROTLI_DECODER_ERROR_FORMAT_*</code>，来自编译时的头文件。Debian 的 <code>libnode.so.115</code> 只有这些常量、并链接共享库，单纯扫字符串会判错文件。lotstamp 读取动态导入（ELF、Mach-O、PE），文件链接了 <code>libbrotlidec</code> 时就判定那个库，并把文件列在它下面。</li>
+    </ul>
+    <p>包数据库能回答时（目前是 dpkg），以包版本为准。lotstamp 没有标记或权威包版本时绝不判 FIXED，也从不执行它读取的文件。</p>
+  </section>
+
+  <section id="limits">
+    <h2><span>4</span>它不能告诉你的</h2>
+    <ul>
+      <li>它判定的是代码，不是可达性。VS Code 的 <code>vsce-sign</code> 带着修复前的解码器；<a href="../docs/#faq">FAQ</a> 说明了为什么我们没找到不可信数据到达它的路径，它仍被列为 BEHIND。</li>
+      <li>打包压缩的载荷（AppImage）在解开前判为 UNKNOWN。</li>
+      <li>本文数据全部来自 Linux x64。Mach-O 和 PE 解析在 CI 的 macOS、Windows runner 上有测试，但那边的应用发现只跑过模拟目录结构。</li>
+    </ul>
+    <pre><code>curl -fsSL https://blackman99.github.io/lotstamp/install.sh | sh
+lotstamp            <span class="c"># 扫描常见位置</span>
+lotstamp dist/      <span class="c"># 或者一个构建产物</span></code></pre>
+    <p>源码和原始公告数据：<a href="https://github.com/Blackman99/lotstamp">github.com/Blackman99/lotstamp</a>。</p>
+  </section>
+</main>
+</div>
+<footer class="docfoot">lotstamp is MIT licensed · <a href="https://github.com/Blackman99/lotstamp">source</a> · <a href="../docs/">docs</a> · <a href="../">back to the belt</a></footer>
+</body>
+</html>
