@@ -34,6 +34,8 @@ summary::-webkit-details-marker{display:none}
 summary::before{content:"";position:absolute;left:0;top:19px;width:12px;height:15px;border-radius:50% 50% 46% 46%/58% 58% 42% 42%;background:var(--unknown);transition:background .25s,box-shadow .25s}
 details[open] summary::before{background:var(--l1);box-shadow:0 0 0 4px rgba(255,210,122,.18)}
 details p{margin:0 0 16px;color:#d6d8ea}
+details ul{margin:0 0 16px;padding-left:20px;color:#d6d8ea;max-width:68ch}
+details li{margin:6px 0}
 .docfoot{text-align:center;padding:28px;color:var(--muted);font-size:14px;border-top:1px solid var(--lift)}
 @media (max-width:860px){
   .docwrap{grid-template-columns:minmax(0,1fr)}
