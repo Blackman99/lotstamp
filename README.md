@@ -6,7 +6,7 @@
 
 lotstamp reads the Brotli decoder compiled into every Node, Bun, Electron, Python and system library copy on your machine (or in a build artifact) and tells you whether the code you actually run has the CVE-2026-111497 fix, and who has to ship it: you, the app vendor, or your distro. It never executes what it reads.
 
-[Landing page](https://blackman99.github.io/lotstamp/) · [Docs](https://blackman99.github.io/lotstamp/docs/) · [Releases](https://github.com/Blackman99/lotstamp/releases)
+[Landing page](https://blackman99.github.io/lotstamp/) · [Docs](https://blackman99.github.io/lotstamp/docs/) · Blog: [Why version strings mislead](https://blackman99.github.io/lotstamp/blog/version-strings.html) / [中文](https://blackman99.github.io/lotstamp/blog/version-strings.zh.html) · [Releases](https://github.com/Blackman99/lotstamp/releases)
 
 ## Why
 
