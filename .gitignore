@@ -1,0 +1,6 @@
+/lotstamp
+/dist/
+/dogfood/
+*.test
+*.out
+.DS_Store
