@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>lotstamp docs: install, usage, the GitHub Action, grades, JSON, FAQ</title>
+<meta name="description" content="How to install and run lotstamp, use it as a GitHub Action, read its grades, exit codes and JSON, and why it reads the decoder instead of the version string.">
+<link rel="canonical" href="https://blackman99.github.io/lotstamp/docs/">
+<link rel="icon" href="../img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../img/logo-512.png">
+<meta name="theme-color" content="#1b2a6b">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="lotstamp">
+<meta property="og:title" content="lotstamp docs">
+<meta property="og:description" content="Install, usage, the GitHub Action, grades, exit codes, JSON and FAQ for lotstamp, the CVE-2026-111497 Brotli decoder check.">
+<meta property="og:url" content="https://blackman99.github.io/lotstamp/docs/">
+<meta property="og:image" content="https://blackman99.github.io/lotstamp/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Eggs on a candling belt, stamped with Node versions, graded by what the light shows inside.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="lotstamp docs">
+<meta name="twitter:description" content="Install, usage, the GitHub Action, grades, exit codes, JSON and FAQ.">
+<meta name="twitter:image" content="https://blackman99.github.io/lotstamp/og.png">
+<link rel="preload" href="../fonts/Onest.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/SometypeMono.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="docs.css">
+</head>
+<body class="docs">
+<a class="skip" href="#main">Skip to the docs</a>
+<header class="topbar">
+  <a class="brand" href="../"><img src="../img/favicon.svg" alt="" width="26" height="26"> lotstamp</a>
+  <nav aria-label="site"><a href="../">Belt</a><a href="#faq">FAQ</a><a href="https://github.com/Blackman99/lotstamp">GitHub</a></nav>
+</header>
+<div class="docwrap">
+<aside class="toc" aria-label="On this page">
+  <p class="tochead">The grading manual</p>
+  <ol>
+    <li><a href="#install">Install</a></li>
+    <li><a href="#usage">Usage</a></li>
+    <li><a href="#action">GitHub Action</a></li>
+    <li><a href="#config">Flags &amp; environment</a></li>
+    <li><a href="#grades">Grades &amp; exit codes</a></li>
+    <li><a href="#json">JSON report</a></li>
+    <li><a href="#how">How the reading works</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ol>
+</aside>
+<main id="main">
+  <h1>The grading manual</h1>
+  <p class="lede">lotstamp opens every file that can carry a JavaScript runtime's Brotli decoder, looks for the error name the CVE-2026-111497 fix added, and grades each copy. It reads bytes. It never starts a binary, so a backdoored or broken one can't do anything while it is checked.</p>
+
+  <section id="install">
+    <h2><span>1</span>Install</h2>
+    <p>One static Go binary for Linux, macOS and Windows (amd64, arm64). The script picks the right archive from the latest release, checks it against <code>checksums.txt</code>, and puts it in <code>~/.local/bin</code>.</p>
+    <pre><code>curl -fsSL https://blackman99.github.io/lotstamp/install.sh | sh</code></pre>
+    <p>It is 51 lines; <a href="../install.sh">read it first</a> if you'd rather. Other ways:</p>
+    <pre><code><span class="c"># Go 1.22+</span>
+go install github.com/Blackman99/lotstamp/cmd/lotstamp@latest
+
+<span class="c"># by hand: pick an archive, check it, unpack</span>
+https://github.com/Blackman99/lotstamp/releases/latest</code></pre>
+    <p><code>LOTSTAMP_BIN=/usr/local/bin</code> changes where the script installs; <code>LOTSTAMP_VERSION=v0.1.0</code> pins a release.</p>
+  </section>
+
+  <section id="usage">
+    <h2><span>2</span>Usage</h2>
+    <p>With no arguments it reads this machine: everything on <code>PATH</code> (following npm, pnpm and bun launcher scripts to the binary they start), nvm, volta, fnm, mise, asdf and n installs, <code>~/.bun</code>, native AI coding tool installs (Claude Code, OpenCode, Cursor agent, Windsurf), the binaries inside global npm/pnpm/bun packages (Codex, Claude Code and OpenCode ship them there), Electron app bundles in <code>/Applications</code>, <code>/opt</code>, <code>/usr/share</code>, <code>Program Files</code> and <code>AppData\Local\Programs</code>, AppImages, Python Brotli modules in site-packages, and the commands your MCP configs launch.</p>
+    <pre><code>lotstamp                       <span class="c"># this machine</span>
+lotstamp dist/ build/app.AppImage   <span class="c"># only these files or folders</span>
+lotstamp --all                 <span class="c"># also list files with no decoder</span>
+lotstamp --json &gt; report.json  <span class="c"># for scripts</span>
+lotstamp advisory              <span class="c"># what is checked, and the sources</span></code></pre>
+    <p>A finding reads like this (a Debian 13 box before <code>apt upgrade</code>):</p>
+<pre class="slip"><code><b class="bh">BEHIND</b>      Brotli decoder library libbrotlidec.so.1.1.0  /usr/lib/x86_64-linux-gnu/libbrotlidec.so.1.1.0
+            system libbrotli1 1.1.0-2+b7
+            decoder  pre-fix code: 16 decoder error names, no BLOCK_SWITCH
+            used by  /usr/bin/node (Node 20.19.2)  via libnode.so.115 → libbrotlidec.so.1
+                fix  sudo apt update &amp;&amp; sudo apt install --only-upgrade libbrotli1
+                     (fixed in 1.1.0-2+deb13u1, DSA-6582-1)  · who: you</code></pre>
+    <p><b>who</b> says who can fix it: <i>you</i> (upgrade it yourself), <i>vendor</i> (the runtime is bundled inside someone's app; update the app or wait for them), or <i>distro</i> (a shared library that comes with your OS packages).</p>
+  </section>
+
+  <section id="action">
+    <h2><span>3</span>GitHub Action</h2>
+    <p>Fail a build when something you ship still carries the old decoder: an Electron app, a Bun-compiled CLI, a container rootfs, a vendored Node.</p>
+<pre><code>- uses: Blackman99/lotstamp@v0
+  with:
+    paths: dist/ out/linux-unpacked/   <span class="c"># empty = the runner itself</span>
+    fail-on: behind                    <span class="c"># behind | unknown | never</span></code></pre>
+    <table class="kv">
+      <thead><tr><th scope="col">input</th><th scope="col">default</th><th scope="col">meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>paths</code></td><td><i>empty</i></td><td>Files or folders to read, space-separated. Empty reads the runner like <code>lotstamp</code> with no arguments.</td></tr>
+        <tr><td><code>fail-on</code></td><td><code>behind</code></td><td><code>unknown</code> also fails on packed AppImages it can't open; <code>never</code> only reports.</td></tr>
+        <tr><td><code>version</code></td><td><code>latest</code></td><td>Release tag of lotstamp to download (checksum checked).</td></tr>
+      </tbody>
+    </table>
+    <p>The text report goes to the job log and the step summary; output <code>report</code> is the path of the JSON report, for an upload-artifact step.</p>
+  </section>
+
+  <section id="config">
+    <h2><span>4</span>Flags &amp; environment</h2>
+    <table class="kv">
+      <thead><tr><th scope="col">flag</th><th scope="col">what it does</th></tr></thead>
+      <tbody>
+        <tr><td><code>--json</code></td><td>JSON on stdout instead of text.</td></tr>
+        <tr><td><code>--json-file FILE</code></td><td>Also write the JSON report to FILE; the text still goes to stdout. Each file is read once.</td></tr>
+        <tr><td><code>--all</code></td><td>List the runtime-sized files that carry no Brotli decoder too (Go and Rust CLIs, for example).</td></tr>
+        <tr><td><code>--fail-on LEVEL</code></td><td><code>behind</code> (default), <code>unknown</code>, <code>never</code>. See <a href="#grades">exit codes</a>.</td></tr>
+        <tr><td><code>--no-color</code></td><td>Plain text. <code>NO_COLOR</code> is honoured, and color is off when stdout isn't a terminal.</td></tr>
+      </tbody>
+    </table>
+    <table class="kv">
+      <thead><tr><th scope="col">environment</th><th scope="col">what it does</th></tr></thead>
+      <tbody>
+        <tr><td><code>LOTSTAMP_TRACE=1</code></td><td>Print how long each discovery phase and each file read took, on stderr. Use it if a scan is slow.</td></tr>
+        <tr><td><code>LOTSTAMP_BIN</code>, <code>LOTSTAMP_VERSION</code></td><td>Install directory and release tag for <code>install.sh</code> (and the Action).</td></tr>
+      </tbody>
+    </table>
+    <p>There is no config file. The advisory data (fix marker, fixed versions, distro backports) is compiled in; <code>lotstamp advisory</code> prints it with its sources.</p>
+  </section>
+
+  <section id="grades">
+    <h2><span>5</span>Grades &amp; exit codes</h2>
+    <dl class="dgrades">
+      <div><dt class="g-fixed">FIXED</dt><dd>The decoder's error-name table contains <code>BLOCK_SWITCH</code>, the name the fix added. Whatever the version string says.</dd></div>
+      <div><dt class="g-behind">BEHIND</dt><dd>The table is there (at least 12 of the 16 older names) and <code>BLOCK_SWITCH</code> isn't. Exit 3.</dd></div>
+      <div><dt class="g-behind">NO-FIX-LINE</dt><dd>Behind, and the runtime's release line gets no fix (Node lines other than 22, 24 and 26). Upgrading within the line won't help. Exit 3.</dd></div>
+      <div><dt class="g-unknown">UNKNOWN</dt><dd>There is a decoder but no readable answer: a compressed AppImage payload, or a Brotli library without an error table. Files it may not open are listed as <i>skipped</i> instead. Exit 3 only with <code>--fail-on unknown</code>.</dd></div>
+      <div><dt>NO-DECODER</dt><dd>A runtime-sized binary with no Brotli decoder inside. Only listed with <code>--all</code>.</dd></div>
+    </dl>
+    <p class="exits"><code>0</code> nothing behind · <code>3</code> a decoder is behind · <code>1</code> error (nothing could be read) · <code>64</code> bad flags</p>
+  </section>
+
+  <section id="json">
+    <h2><span>6</span>JSON report</h2>
+    <p>Stable keys; new ones may be added. <code>evidence</code> is what was read from the file, so you can check the grade yourself.</p>
+<pre><code>{
+  "tool": "lotstamp", "version": "0.1.0", "advisory": "CVE-2026-111497",
+  "scope": "this machine", "files_read": 27,
+  "counts": { "BEHIND": 5, "FIXED": 3, "NO-DECODER": 18 },
+  "findings": [{
+    "status": "BEHIND",
+    "path": "/usr/local/lib/pnpm/5/.pnpm/bun@1.4.2/node_modules/bun/bin/bun.exe",
+    "label": "bun 1.4.2 (package)", "kind": "bun",
+    "runtime": "Bun 1.4.2",
+    "decoder": "pre-fix code: 16 decoder error names, no BLOCK_SWITCH",
+    "version_says": "contains a Node 26.3.0 headers URL",
+    "but": "that is Bun's Node-compat level; the runtime is Bun 1.4.2",
+    "fix": "upgrade Bun: bun upgrade, or reinstall it the way you installed it (Bun 1.4.4 or newer has the fix)",
+    "who": "you",
+    "found_via": ["global packages /usr/local/lib/pnpm"],
+    "evidence": { "size": 79500640, "format": "elf",
+                  "bun": ["1.4.2"], "node": ["26.3.0"],
+                  "decoder_names": 16, "fix_marker": false }
+  }]
+}</code></pre>
+  </section>
+
+  <section id="how">
+    <h2><span>7</span>How the reading works</h2>
+    <p>The fix for CVE-2026-111497 (Brotli upstream <code>0ed4268</code>, backported to 1.2.1, 1.1.1 and 1.0.10) added a new decoder error, <code>BROTLI_DECODER_ERROR_FORMAT_BLOCK_SWITCH</code> (-17). Brotli compiles the names of its errors into a string table, so the fix leaves a fingerprint in every binary that links the decoder: 17 names instead of 16.</p>
+    <p>lotstamp streams each file in 8 MB windows and looks for that table. Brotli 1.1+ stores names like <code>_ERROR_FORMAT_PADDING_1</code>; 1.0.x stores the bare <code>PADDING_1</code>, so both spellings are matched. Node's <code>zlib.constants</code> carry the same names with a <code>BROTLI_DECODER_</code> prefix; they come from the headers Node was built with, so in a binary that links a shared <code>libbrotlidec</code> they are ignored and the library itself is read instead. That is how <code>/usr/bin/node</code> on Debian gets graded by <code>libbrotlidec.so.1</code>, which is where the code that runs lives.</p>
+    <p>The version stamps are still read, for the report: <code>NODE_VERSION</code>-style strings, Bun's version, Electron's and Chromium's. They decide nothing. Bun reports Node 26.3.0 as its Node-compat level; Electron apps report a Node whose Brotli comes from Chromium. Version checks get both wrong.</p>
+  </section>
+
+  <section id="faq">
+    <h2><span>8</span>FAQ</h2>
+    <details open><summary>My Cursor / VS Code / Windsurf says Node 24.19.0. lotstamp says FIXED. Who's right?</summary>
+      <p>The decoder. Electron builds its Node against Chromium's copy of Brotli, and Chromium M148 rolled in the fix on 2026-03-18. Electron 42+ ships Chromium 148+, so the bundled Node's Brotli is fixed even though its Node version predates Node's own fix release. lotstamp shows the 17 names it found.</p></details>
+    <details><summary>Does it run anything? Does it need root?</summary>
+      <p>No and no. It stats and reads files; it never executes them or loads them as libraries. Files it can't open are listed as <i>skipped</i>. With sudo it can read other users' installs too.</p></details>
+    <details><summary>Why not just compare <code>node --version</code>?</summary>
+      <p>On the 8 AI coding tools we measured (latest Linux x64 builds, 2026-10-24), a version comparison flagged 6 as exposed. All 6 carry the fixed decoder. On a Debian 13 box it flagged 4 of 7 copies and missed the 2 that weren't Node at all: Python's <code>brotli</code> module and the system <code>libbrotlidec</code> Debian's node actually uses. The data is on <a href="../#belt">the belt</a> and in <code>site/demo.json</code>.</p></details>
+    <details><summary>How fast is it?</summary>
+      <p>1.4 s on the Debian box the belt shows (27 files read); it reads only runtime-sized binaries (8 MB+) and Brotli libraries, four at a time. <code>LOTSTAMP_TRACE=1</code> shows where the time goes.</p></details>
+    <details><summary>An AppImage shows UNKNOWN.</summary>
+      <p>Its payload is a compressed squashfs. Extract it (<code>./App.AppImage --appimage-extract</code>, which does run the AppImage's own runtime, or <code>unsquashfs</code>) and point lotstamp at <code>squashfs-root/</code>.</p></details>
+    <details><summary>Can it check other CVEs?</summary>
+      <p>Not yet. The probe is general (look for a string a fix added), and the advisory is a JSON file in <code>internal/advisory</code>. The <a href="https://github.com/Blackman99/lotstamp/blob/main/ROADMAP.md">roadmap</a> lists what would come next.</p></details>
+    <details><summary>Something was graded wrong.</summary>
+      <p>Please <a href="https://github.com/Blackman99/lotstamp/issues/new/choose">open an issue</a> with the <code>--json</code> finding; the evidence block is enough to reproduce it without the file.</p></details>
+  </section>
+</main>
+</div>
+<footer class="docfoot">lotstamp is MIT licensed · <a href="https://github.com/Blackman99/lotstamp">source</a> · <a href="https://github.com/Blackman99/lotstamp/releases">releases</a> · <a href="../">back to the belt</a></footer>
+<script>
+// mark the section being read in the contents
+const links = [...document.querySelectorAll('.toc a')];
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting) links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id));
+}), {rootMargin: '-20% 0px -70% 0px'});
+document.querySelectorAll('main section').forEach(s => io.observe(s));
+</script>
+</body>
+</html>
