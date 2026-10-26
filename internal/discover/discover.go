@@ -104,6 +104,9 @@ var labels = []struct {
 	re   *regexp.Regexp
 	name string
 }{
+	{regexp.MustCompile(`(?i)OpenAI[/\\]Codex[/\\]runtimes[/\\]cua_node[/\\]([0-9a-f]+)`), "Codex app computer-use node ($1)"},
+	{regexp.MustCompile(`(?i)OpenAI[/\\]Codex[/\\]bin[/\\]([0-9a-f]+)`), "Codex app node ($1)"},
+	{regexp.MustCompile(`(?i)codex-runtimes[/\\]([A-Za-z0-9_-]+)`), "Codex app $1"},
 	{regexp.MustCompile(`claude[/\\]versions[/\\]([0-9][0-9.]*)`), "Claude Code $1"},
 	{regexp.MustCompile(`claude-code-releases[/\\]([0-9][0-9.]*)`), "Claude Code $1"},
 	{regexp.MustCompile(`@anthropic-ai[/\\]claude-code`), "Claude Code (npm)"},
@@ -262,24 +265,7 @@ func (s *Set) Machine(home string) {
 			s.Add(p, "runtime", g.via)
 		}
 	}
-	appGlobs := []struct{ pat, via string }{
-		{j(".local/share/claude/versions/*"), "Claude Code native install"},
-		{j(".opencode/bin/opencode"), "OpenCode install"},
-		{j(".local/share/cursor-agent/versions/*/*"), "Cursor agent install"},
-		{j(".codeium/windsurf/bin/*"), "Windsurf"},
-	}
-	for _, g := range appGlobs {
-		m, _ := filepath.Glob(g.pat)
-		for _, p := range m {
-			if info, err := os.Stat(p); err == nil {
-				if info.IsDir() {
-					s.Walk(p, "app", g.via, 4)
-				} else if Interesting(p, info) {
-					s.Add(p, "app", g.via)
-				}
-			}
-		}
-	}
+	s.appGlobs(home)
 	t("global packages")
 	// Global JS package trees: native binaries shipped inside npm/pnpm packages.
 	for _, r := range []string{j(".local/lib/node_modules"), "/usr/local/lib/node_modules", "/usr/lib/node_modules",
@@ -297,6 +283,33 @@ func (s *Set) Machine(home string) {
 	t("mcp configs")
 	s.mcp(home)
 	t("")
+}
+
+// appGlobs adds the per-user installs of AI coding tools that ship their own runtime.
+func (s *Set) appGlobs(home string) {
+	j := func(p ...string) string { return filepath.Join(append([]string{home}, p...)...) }
+	for _, g := range []struct{ pat, via string }{
+		{j(".local/share/claude/versions/*"), "Claude Code native install"},
+		{j(".opencode/bin/opencode"), "OpenCode install"},
+		{j(".local/share/cursor-agent/versions/*/*"), "Cursor agent install"},
+		{j(".codeium/windsurf/bin/*"), "Windsurf"},
+		// Codex desktop app on Windows keeps its Node runtimes outside Program Files, one folder
+		// per runtime id; old ids stay on disk (and keep running) until the app restarts.
+		{j("AppData/Local/OpenAI/Codex/bin/*/node.exe"), "Codex app"},
+		{j("AppData/Local/OpenAI/Codex/runtimes/*/*/bin/node.exe"), "Codex app"},
+		{j(".cache/codex-runtimes/*/dependencies/node/bin/node*"), "Codex app"},
+	} {
+		m, _ := filepath.Glob(g.pat)
+		for _, p := range m {
+			if info, err := os.Stat(p); err == nil {
+				if info.IsDir() {
+					s.Walk(p, "app", g.via, 4)
+				} else if Interesting(p, info) {
+					s.Add(p, "app", g.via)
+				}
+			}
+		}
+	}
 }
 
 // trace prints how long each discovery phase took when LOTSTAMP_TRACE is set.

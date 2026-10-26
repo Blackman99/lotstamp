@@ -56,6 +56,9 @@ func TestLabels(t *testing.T) {
 		"/opt/VSCode-linux-x64/code":                                                                     "VS Code",
 		"/opt/VSCode-linux-x64/resources/app/node_modules.asar.unpacked/@vscode/vsce-sign/bin/vsce-sign": "VS Code · vsce-sign",
 		"/opt/node-v24.22.0-linux-x64/bin/node":                                                          "node 24.22.0 tarball",
+		"C:/Users/u/AppData/Local/OpenAI/Codex/runtimes/cua_node/1fb7137c46617d50/bin/node.exe":          "Codex app computer-use node (1fb7137c46617d50)",
+		"C:/Users/u/AppData/Local/OpenAI/Codex/bin/5b9024f90663758b/node.exe":                            "Codex app node (5b9024f90663758b)",
+		"C:/Users/u/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.exe":          "Codex app codex-primary-runtime",
 		"/usr/bin/somethingelse":                                                                         "somethingelse",
 	} {
 		if got := Label(p); got != want {
@@ -95,5 +98,29 @@ func TestSitePackages(t *testing.T) {
 	subs := s.Subjects()
 	if len(subs) != 1 || subs[0].PyVer != "1.2.0" || !strings.EqualFold(subs[0].PyDist, "brotli") {
 		t.Fatalf("%+v", subs)
+	}
+}
+
+func TestCodexAppRuntimes(t *testing.T) {
+	home := t.TempDir()
+	paths := []string{
+		"AppData/Local/OpenAI/Codex/runtimes/cua_node/2b841c3d44b123ec/bin/node.exe",
+		"AppData/Local/OpenAI/Codex/runtimes/cua_node/1fb7137c46617d50/bin/node.exe",
+		"AppData/Local/OpenAI/Codex/bin/5b9024f90663758b/node.exe",
+		".cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.exe",
+	}
+	for _, p := range paths {
+		testfix.Write(t, home, p, testfix.Spec{Table: true})
+	}
+	s := NewSet()
+	s.appGlobs(home)
+	got := s.Subjects()
+	if len(got) != len(paths) {
+		t.Fatalf("found %d Codex runtimes, want %d: %+v", len(got), len(paths), got)
+	}
+	for _, sub := range got {
+		if sub.Origin != "app" || !strings.HasPrefix(sub.Label, "Codex app") {
+			t.Errorf("%s: label %q origin %q", sub.Real, sub.Label, sub.Origin)
+		}
 	}
 }
