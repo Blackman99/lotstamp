@@ -31,6 +31,14 @@ jobs:
           set +e; ./ls.exe --no-color; code=$?; set -e
           echo "exit $code"; test "$code" = 0 -o "$code" = 3
           ./ls.exe --json > scan.json && python3 -c "import json; d=json.load(open('scan.json')); print(d['files_read'], 'files read')" || python -c "import json; d=json.load(open('scan.json')); print(d['files_read'], 'files read')"
+  govulncheck:
+    name: known Go vulnerabilities reachable from lotstamp
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with: {go-version-file: go.mod}
+      - run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
   real-runtimes:
     name: real Node, Bun and Debian libbrotli bytes
     runs-on: ubuntu-latest

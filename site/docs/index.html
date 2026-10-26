@@ -56,7 +56,7 @@
     <p>One static Go binary for Linux, macOS and Windows (amd64, arm64). The script picks the right archive from the latest release, checks it against <code>checksums.txt</code>, and puts it in <code>~/.local/bin</code>.</p>
     <pre><code>curl -fsSL https://blackman99.github.io/lotstamp/install.sh | sh</code></pre>
     <p>It is 51 lines; <a href="../install.sh">read it first</a> if you'd rather. Other ways:</p>
-    <pre><code><span class="c"># Go 1.22+</span>
+    <pre><code><span class="c"># Go 1.26+</span>
 go install github.com/Blackman99/lotstamp/cmd/lotstamp@latest
 
 <span class="c"># by hand: pick an archive, check it, unpack</span>
